@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import RegistryPanel from '@/components/services/RegistryPanel'
 import ReputationPanel from '@/components/services/ReputationPanel'
 import DeadDropPanel from '@/components/services/DeadDropPanel'
@@ -66,23 +67,41 @@ export default function ServicesPage() {
         </div>
 
         {/* Merchant wallet — always visible */}
-        <div className="mb-8 border border-zinc-700 rounded-xl px-5 py-4 bg-zinc-950/60 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-mono text-zinc-500 mb-1">SEND DROPS TO THIS ADDRESS</p>
+        <div className="mb-8 border border-zinc-700 rounded-xl px-5 py-4 bg-zinc-950/60 flex flex-col sm:flex-row gap-5 sm:items-center">
+          {/* QR Code */}
+          <div className="shrink-0 flex items-center justify-center">
             {merchantAddress ? (
-              <p className="text-green-400 font-mono text-sm break-all">{merchantAddress}</p>
+              <div className="p-2 bg-white rounded-xl">
+                <QRCodeSVG
+                  value={merchantAddress}
+                  size={100}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="M"
+                />
+              </div>
+            ) : (
+              <div className="w-[116px] h-[116px] bg-zinc-900 rounded-xl animate-pulse" />
+            )}
+          </div>
+
+          {/* Address + copy */}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-mono text-zinc-500 mb-2">SEND DROPS TO THIS ADDRESS</p>
+            {merchantAddress ? (
+              <p className="text-green-400 font-mono text-sm break-all leading-relaxed">{merchantAddress}</p>
             ) : (
               <p className="text-zinc-600 font-mono text-sm animate-pulse">Loading...</p>
             )}
+            {merchantAddress && (
+              <button
+                onClick={() => navigator.clipboard.writeText(merchantAddress)}
+                className="mt-3 text-xs font-mono border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white rounded-lg px-3 py-1.5 transition-colors"
+              >
+                COPY ADDRESS
+              </button>
+            )}
           </div>
-          {merchantAddress && (
-            <button
-              onClick={() => navigator.clipboard.writeText(merchantAddress)}
-              className="shrink-0 text-xs font-mono border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white rounded-lg px-3 py-2 transition-colors"
-            >
-              COPY
-            </button>
-          )}
         </div>
 
         {/* Tab bar */}
