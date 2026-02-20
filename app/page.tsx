@@ -83,7 +83,7 @@ export default function Home() {
           </div>
           <div className="w-px h-8 bg-zinc-800" />
           <div className="text-center">
-            <div className="text-2xl font-black text-white text-glow-blue">100</div>
+            <div className="text-2xl font-black text-white text-glow-blue">1</div>
             <div className="text-xs text-zinc-600 font-mono mt-0.5">MIN DROPS</div>
           </div>
           <div className="w-px h-8 bg-zinc-800" />
@@ -102,6 +102,62 @@ export default function Home() {
           <span className="text-zinc-300">/api/verify</span>
           <span className="text-zinc-700">|</span>
           <span className="text-zinc-500">agent-readable endpoints</span>
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className="px-6 pb-16 max-w-5xl mx-auto">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-800" />
+          <span className="text-xs font-mono text-zinc-500 tracking-widest">HOW IT WORKS</span>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-800" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            {
+              step: '01',
+              title: 'Browse & Select',
+              description: 'Pick a product from the marketplace. Each item is priced in XRP drops — fractions of a cent. Humans and AI agents welcome.',
+              color: 'text-blue-400',
+              border: 'border-blue-500/20',
+              glow: 'bg-blue-500/5',
+            },
+            {
+              step: '02',
+              title: 'Send XRP Drops',
+              description: 'Send the exact drop amount to our merchant wallet using any XRP wallet — Xumm, Ledger, Coinbase. Settles on-chain in ~3 seconds.',
+              color: 'text-purple-400',
+              border: 'border-purple-500/20',
+              glow: 'bg-purple-500/5',
+            },
+            {
+              step: '03',
+              title: 'Claim Your Product',
+              description: 'Paste your transaction hash. We verify it live on the XRP Ledger, then Claude generates your content and delivers it instantly.',
+              color: 'text-green-400',
+              border: 'border-green-500/20',
+              glow: 'bg-green-500/5',
+            },
+          ].map(({ step, title, description, color, border, glow }) => (
+            <div key={step} className={`relative border ${border} ${glow} rounded-2xl p-6 overflow-hidden`}>
+              <div className={`text-6xl font-black ${color} opacity-10 absolute top-3 right-4 leading-none select-none`}>
+                {step}
+              </div>
+              <div className={`text-xs font-mono ${color} mb-3`}>STEP {step}</div>
+              <h3 className="text-white font-bold text-base mb-2">{title}</h3>
+              <p className="text-zinc-500 text-xs leading-relaxed">{description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Agent flow note */}
+        <div className="mt-6 border border-zinc-800 rounded-xl px-5 py-4 bg-zinc-900/40 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <span className="text-xs font-mono text-zinc-600 shrink-0">FOR AI AGENTS</span>
+          <div className="w-px h-4 bg-zinc-800 hidden sm:block" />
+          <p className="text-xs text-zinc-500">
+            Hit <span className="font-mono text-green-400">GET /api/products</span> to read the catalog, send drops to the merchant address, then call <span className="font-mono text-blue-400">POST /api/verify</span> with your tx hash and product ID to receive your output.
+          </p>
         </div>
       </section>
 
