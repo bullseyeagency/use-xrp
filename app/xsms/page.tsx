@@ -139,19 +139,16 @@ export default function XSMSPage() {
   const [autoPlay, setAutoPlay] = useState(true)
   const [messageCount, setMessageCount] = useState(20)
 
-  // Cost constants (drops)
-  const STORE_DROPS = 5        // Dead Drop store service fee
-  const RETRIEVE_DROPS = 3     // Dead Drop retrieve service fee
-  const TX_FEE_DROPS = 12      // XRPL network fee per transaction (to validators)
-  const PLATFORM_DROPS = 1     // Platform fee per message
+  // Cost constants (drops) — 1 exchange = 1 send + 1 receive
+  const PLATFORM_FEE_DROPS = 5   // platform fee per tx (send or receive)
+  const TX_FEE_DROPS = 10        // XRPL network fee per tx (to validators)
   const USD_PER_DROP = 1.40 / 1_000_000
 
-  const serviceDrops  = (STORE_DROPS + RETRIEVE_DROPS) * messageCount   // 8/msg
-  const txFeeDrops    = TX_FEE_DROPS * 2 * messageCount                  // 24/msg (2 txs)
-  const platformDrops = PLATFORM_DROPS * messageCount                    // 1/msg
-  const totalDrops    = serviceDrops + txFeeDrops + platformDrops        // 33/msg
+  const platformDrops = PLATFORM_FEE_DROPS * 2 * messageCount   // 10/exchange (5 send + 5 receive)
+  const txFeeDrops    = TX_FEE_DROPS * 2 * messageCount          // 20/exchange (2 txs)
+  const totalDrops    = platformDrops + txFeeDrops               // 30/exchange
   const totalUSD      = totalDrops * USD_PER_DROP
-  const perMsgDrops   = serviceDrops / messageCount + TX_FEE_DROPS * 2 + PLATFORM_DROPS
+  const perMsgDrops   = 30                                       // drops per exchange
 
   useEffect(() => {
     if (!autoPlay) return
@@ -327,6 +324,250 @@ export default function XSMSPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── CONVERSATION COST CALCULATOR ── */}
+        <section className="pb-20">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-800" />
+            <span className="text-xs font-mono text-zinc-500 tracking-widest">CONVERSATION COST CALCULATOR</span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-800" />
+          </div>
+
+          <div className="border border-zinc-800 rounded-2xl overflow-hidden">
+            {/* Slider */}
+            <div className="p-8 border-b border-zinc-800">
+              <div className="flex items-end justify-between mb-4">
+                <div>
+                  <p className="text-xs font-mono text-zinc-500 mb-1">MESSAGES IN CONVERSATION</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-6xl font-black text-white tabular-nums">{messageCount}</span>
+                    <span className="text-zinc-500 font-mono text-sm">msg{messageCount !== 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono text-zinc-600 mb-1">TOTAL COST</p>
+                  <p className="text-3xl font-black text-green-400 tabular-nums">{totalDrops.toLocaleString()}</p>
+                  <p className="text-zinc-500 text-xs font-mono">drops <span className="text-zinc-600">(${totalUSD < 0.001 ? totalUSD.toFixed(6) : totalUSD.toFixed(4)})</span></p>
+                </div>
+              </div>
+
+              {/* Range input */}
+              <div className="relative mt-6">
+                <input
+                  type="range"
+                  min={1}
+                  max={500}
+                  value={messageCount}
+                  onChange={e => setMessageCount(Number(e.target.value))}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #22c55e ${(messageCount / 500) * 100}%, #27272a ${(messageCount / 500) * 100}%)`,
+                  }}
+                />
+                <div className="flex justify-between mt-2 text-xs font-mono text-zinc-700">
+                  <span>1</span>
+                  <span>100</span>
+                  <span>200</span>
+                  <span>300</span>
+                  <span>400</span>
+                  <span>500</span>
+                </div>
+              </div>
+
+              {/* Quick presets */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                <span className="text-xs font-mono text-zinc-600 self-center mr-1">PRESETS:</span>
+                {[
+                  { label: '10 msgs', v: 10 },
+                  { label: '50 msgs', v: 50 },
+                  { label: '100 msgs', v: 100 },
+                  { label: '1 day', v: 40 },
+                  { label: '1 week', v: 200 },
+                  { label: '1 month', v: 500 },
+                ].map(({ label, v }) => (
+                  <button
+                    key={label}
+                    onClick={() => setMessageCount(v)}
+                    className={`text-xs font-mono border rounded-full px-3 py-1 transition-colors ${
+                      messageCount === v
+                        ? 'border-green-600 text-green-400 bg-green-950/30'
+                        : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cost breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
+              {/* Platform send fee */}
+              <div className="p-6">
+                <p className="text-xs font-mono text-zinc-600 mb-1">PLATFORM FEE (SEND)</p>
+                <p className="text-2xl font-black text-blue-400 tabular-nums">{(PLATFORM_FEE_DROPS * messageCount).toLocaleString()}</p>
+                <p className="text-zinc-600 text-xs font-mono">drops <span className="text-zinc-700">(${((PLATFORM_FEE_DROPS * messageCount) * USD_PER_DROP).toFixed(6)})</span></p>
+                <div className="mt-3 space-y-1 text-xs font-mono text-zinc-600">
+                  <div className="flex justify-between">
+                    <span>5 drops × {messageCount} exchanges</span>
+                    <span className="text-zinc-500">{(PLATFORM_FEE_DROPS * messageCount).toLocaleString()} <span className="text-zinc-700">(${((PLATFORM_FEE_DROPS * messageCount) * USD_PER_DROP).toFixed(6)})</span></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Goes to UseXRP</span>
+                    <span className="text-zinc-500">—</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Platform receive fee */}
+              <div className="p-6">
+                <p className="text-xs font-mono text-zinc-600 mb-1">PLATFORM FEE (RECEIVE)</p>
+                <p className="text-2xl font-black text-yellow-400 tabular-nums">{(PLATFORM_FEE_DROPS * messageCount).toLocaleString()}</p>
+                <p className="text-zinc-600 text-xs font-mono">drops <span className="text-zinc-700">(${((PLATFORM_FEE_DROPS * messageCount) * USD_PER_DROP).toFixed(6)})</span></p>
+                <div className="mt-3 space-y-1 text-xs font-mono text-zinc-600">
+                  <div className="flex justify-between">
+                    <span>5 drops × {messageCount} exchanges</span>
+                    <span className="text-zinc-500">{(PLATFORM_FEE_DROPS * messageCount).toLocaleString()} <span className="text-zinc-700">(${((PLATFORM_FEE_DROPS * messageCount) * USD_PER_DROP).toFixed(6)})</span></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Goes to UseXRP</span>
+                    <span className="text-zinc-500">—</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* TX fee */}
+              <div className="p-6">
+                <p className="text-xs font-mono text-zinc-600 mb-1">XRPL NETWORK FEE</p>
+                <p className="text-2xl font-black text-purple-400 tabular-nums">{txFeeDrops.toLocaleString()}</p>
+                <p className="text-zinc-600 text-xs font-mono">drops <span className="text-zinc-700">(${(txFeeDrops * USD_PER_DROP).toFixed(6)})</span></p>
+                <div className="mt-3 space-y-1 text-xs font-mono text-zinc-600">
+                  <div className="flex justify-between">
+                    <span>2 txs × 10 drops × {messageCount}</span>
+                    <span className="text-zinc-500">{txFeeDrops.toLocaleString()} <span className="text-zinc-700">(${(txFeeDrops * USD_PER_DROP).toFixed(6)})</span></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Goes to XRPL validators</span>
+                    <span className="text-zinc-500">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stacked bar */}
+            <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-950/40">
+              <p className="text-xs font-mono text-zinc-600 mb-2">COST BREAKDOWN</p>
+              <div className="flex h-3 rounded-full overflow-hidden gap-px">
+                <div
+                  className="bg-blue-500 transition-all duration-300"
+                  style={{ width: `${((PLATFORM_FEE_DROPS * messageCount) / totalDrops) * 100}%` }}
+                  title={`Platform send: ${(PLATFORM_FEE_DROPS * messageCount).toLocaleString()} drops`}
+                />
+                <div
+                  className="bg-yellow-500 transition-all duration-300"
+                  style={{ width: `${((PLATFORM_FEE_DROPS * messageCount) / totalDrops) * 100}%` }}
+                  title={`Platform receive: ${(PLATFORM_FEE_DROPS * messageCount).toLocaleString()} drops`}
+                />
+                <div
+                  className="bg-purple-500 transition-all duration-300"
+                  style={{ width: `${(txFeeDrops / totalDrops) * 100}%` }}
+                  title={`Network TX: ${txFeeDrops.toLocaleString()} drops`}
+                />
+              </div>
+              <div className="flex gap-4 mt-2">
+                {[
+                  { color: 'bg-blue-500', label: 'Platform Send', pct: Math.round(((PLATFORM_FEE_DROPS * messageCount) / totalDrops) * 100) },
+                  { color: 'bg-yellow-500', label: 'Platform Receive', pct: Math.round(((PLATFORM_FEE_DROPS * messageCount) / totalDrops) * 100) },
+                  { color: 'bg-purple-500', label: 'Network TX', pct: Math.round((txFeeDrops / totalDrops) * 100) },
+                ].map(({ color, label, pct }) => (
+                  <div key={label} className="flex items-center gap-1.5 text-xs font-mono text-zinc-500">
+                    <span className={`w-2 h-2 rounded-full ${color} shrink-0`} />
+                    {label} {pct}%
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* USD + per-exchange + context */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800 border-t border-zinc-800">
+              <div className="p-6 bg-green-950/10">
+                <p className="text-xs font-mono text-zinc-500 mb-1">TOTAL IN USD</p>
+                <p className="text-3xl font-black text-green-400 tabular-nums">
+                  ${totalUSD < 0.001 ? totalUSD.toFixed(6) : totalUSD.toFixed(4)}
+                </p>
+                <p className="text-zinc-500 text-xs font-mono mt-1">at XRP = $1.40</p>
+              </div>
+
+              <div className="p-6">
+                <p className="text-xs font-mono text-zinc-500 mb-1">PER EXCHANGE</p>
+                <p className="text-3xl font-black text-white tabular-nums">{perMsgDrops}</p>
+                <p className="text-zinc-500 text-xs font-mono mt-1">
+                  drops <span className="text-zinc-600">(${(perMsgDrops * USD_PER_DROP).toFixed(7)})</span>
+                </p>
+              </div>
+
+              <div className="p-6">
+                <p className="text-xs font-mono text-zinc-500 mb-1">$1 BUYS YOU</p>
+                <p className="text-3xl font-black text-white tabular-nums">
+                  {Math.floor(1 / (totalUSD / messageCount)).toLocaleString()}
+                </p>
+                <p className="text-zinc-500 text-xs font-mono mt-1">
+                  encrypted messages
+                </p>
+              </div>
+            </div>
+
+            {/* Competitor comparison */}
+            <div className="border-t border-zinc-800 p-6 bg-zinc-950/40">
+              <p className="text-xs font-mono text-zinc-600 mb-4">COST COMPARISON FOR {messageCount} MESSAGES</p>
+              <div className="space-y-2">
+                {[
+                  {
+                    name: 'iMessage / WhatsApp',
+                    cost: '$0.00',
+                    note: 'Apple / Meta store and can access your metadata. US law enforcement requests honored.',
+                    bar: 0,
+                    color: 'bg-zinc-700',
+                    tag: 'FREE YOUR DATA',
+                    tagColor: 'text-red-500 border-red-900/50',
+                  },
+                  {
+                    name: 'Signal',
+                    cost: '$0.00',
+                    note: 'Strong E2E encryption. Non-profit. But a subpoena could compel metadata or key disclosure in edge cases.',
+                    bar: 0,
+                    color: 'bg-zinc-600',
+                    tag: 'TRUST THE ORG',
+                    tagColor: 'text-yellow-600 border-yellow-900/50',
+                  },
+                  {
+                    name: 'xSMS XRP',
+                    cost: `$${totalUSD < 0.001 ? totalUSD.toFixed(6) : totalUSD.toFixed(4)}`,
+                    note: `${totalDrops.toLocaleString()} drops · 30/exchange (15 send + 15 receive) · 10 to platform · Server mathematically blind.`,
+                    bar: 100,
+                    color: 'bg-green-500',
+                    tag: 'TRUST MATH',
+                    tagColor: 'text-green-400 border-green-800/50',
+                  },
+                ].map(({ name, cost, note, bar, color, tag, tagColor }) => (
+                  <div key={name} className="flex items-start gap-3">
+                    <div className="w-32 shrink-0 pt-0.5">
+                      <p className="text-zinc-300 text-xs font-semibold">{name}</p>
+                      <p className="text-zinc-600 text-xs font-mono">{cost}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden mb-1">
+                        <div className={`h-full ${color} rounded-full`} style={{ width: bar > 0 ? '100%' : '4px' }} />
+                      </div>
+                      <p className="text-zinc-600 text-xs leading-relaxed">{note}</p>
+                    </div>
+                    <span className={`shrink-0 text-xs font-mono border rounded-full px-2 py-0.5 ${tagColor}`}>{tag}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -788,250 +1029,6 @@ export default function XSMSPage() {
           </div>
         </section>
 
-        {/* ── CONVERSATION COST CALCULATOR ── */}
-        <section className="pb-20">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-800" />
-            <span className="text-xs font-mono text-zinc-500 tracking-widest">CONVERSATION COST CALCULATOR</span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-800" />
-          </div>
-
-          <div className="border border-zinc-800 rounded-2xl overflow-hidden">
-            {/* Slider */}
-            <div className="p-8 border-b border-zinc-800">
-              <div className="flex items-end justify-between mb-4">
-                <div>
-                  <p className="text-xs font-mono text-zinc-500 mb-1">MESSAGES IN CONVERSATION</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-black text-white tabular-nums">{messageCount}</span>
-                    <span className="text-zinc-500 font-mono text-sm">msg{messageCount !== 1 ? 's' : ''}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-mono text-zinc-600 mb-1">TOTAL COST</p>
-                  <p className="text-3xl font-black text-green-400 tabular-nums">{totalDrops.toLocaleString()}</p>
-                  <p className="text-zinc-500 text-xs font-mono">drops</p>
-                </div>
-              </div>
-
-              {/* Range input */}
-              <div className="relative mt-6">
-                <input
-                  type="range"
-                  min={1}
-                  max={500}
-                  value={messageCount}
-                  onChange={e => setMessageCount(Number(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #22c55e ${(messageCount / 500) * 100}%, #27272a ${(messageCount / 500) * 100}%)`,
-                  }}
-                />
-                <div className="flex justify-between mt-2 text-xs font-mono text-zinc-700">
-                  <span>1</span>
-                  <span>100</span>
-                  <span>200</span>
-                  <span>300</span>
-                  <span>400</span>
-                  <span>500</span>
-                </div>
-              </div>
-
-              {/* Quick presets */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                <span className="text-xs font-mono text-zinc-600 self-center mr-1">PRESETS:</span>
-                {[
-                  { label: '10 msgs', v: 10 },
-                  { label: '50 msgs', v: 50 },
-                  { label: '100 msgs', v: 100 },
-                  { label: '1 day', v: 40 },
-                  { label: '1 week', v: 200 },
-                  { label: '1 month', v: 500 },
-                ].map(({ label, v }) => (
-                  <button
-                    key={label}
-                    onClick={() => setMessageCount(v)}
-                    className={`text-xs font-mono border rounded-full px-3 py-1 transition-colors ${
-                      messageCount === v
-                        ? 'border-green-600 text-green-400 bg-green-950/30'
-                        : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Cost breakdown */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
-              {/* Service fee */}
-              <div className="p-6">
-                <p className="text-xs font-mono text-zinc-600 mb-1">SERVICE FEE</p>
-                <p className="text-2xl font-black text-blue-400 tabular-nums">{serviceDrops.toLocaleString()}</p>
-                <p className="text-zinc-600 text-xs font-mono">drops</p>
-                <div className="mt-3 space-y-1 text-xs font-mono text-zinc-600">
-                  <div className="flex justify-between">
-                    <span>Store (5 drops × {messageCount})</span>
-                    <span className="text-zinc-500">{(5 * messageCount).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Retrieve (3 drops × {messageCount})</span>
-                    <span className="text-zinc-500">{(3 * messageCount).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* TX fee */}
-              <div className="p-6">
-                <p className="text-xs font-mono text-zinc-600 mb-1">XRPL NETWORK FEE</p>
-                <p className="text-2xl font-black text-purple-400 tabular-nums">{txFeeDrops.toLocaleString()}</p>
-                <p className="text-zinc-600 text-xs font-mono">drops</p>
-                <div className="mt-3 space-y-1 text-xs font-mono text-zinc-600">
-                  <div className="flex justify-between">
-                    <span>2 txs × 12 drops × {messageCount}</span>
-                    <span className="text-zinc-500">{txFeeDrops.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Goes to XRPL validators</span>
-                    <span className="text-zinc-500">—</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Platform fee */}
-              <div className="p-6">
-                <p className="text-xs font-mono text-zinc-600 mb-1">PLATFORM FEE</p>
-                <p className="text-2xl font-black text-yellow-400 tabular-nums">{platformDrops.toLocaleString()}</p>
-                <p className="text-zinc-600 text-xs font-mono">drops</p>
-                <div className="mt-3 space-y-1 text-xs font-mono text-zinc-600">
-                  <div className="flex justify-between">
-                    <span>1 drop × {messageCount} messages</span>
-                    <span className="text-zinc-500">{platformDrops.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Goes to UseXRP</span>
-                    <span className="text-zinc-500">—</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stacked bar */}
-            <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-950/40">
-              <p className="text-xs font-mono text-zinc-600 mb-2">COST BREAKDOWN</p>
-              <div className="flex h-3 rounded-full overflow-hidden gap-px">
-                <div
-                  className="bg-blue-500 transition-all duration-300"
-                  style={{ width: `${(serviceDrops / totalDrops) * 100}%` }}
-                  title={`Service: ${serviceDrops} drops`}
-                />
-                <div
-                  className="bg-purple-500 transition-all duration-300"
-                  style={{ width: `${(txFeeDrops / totalDrops) * 100}%` }}
-                  title={`TX fees: ${txFeeDrops} drops`}
-                />
-                <div
-                  className="bg-yellow-500 transition-all duration-300"
-                  style={{ width: `${(platformDrops / totalDrops) * 100}%` }}
-                  title={`Platform: ${platformDrops} drops`}
-                />
-              </div>
-              <div className="flex gap-4 mt-2">
-                {[
-                  { color: 'bg-blue-500', label: 'Service', pct: Math.round((serviceDrops / totalDrops) * 100) },
-                  { color: 'bg-purple-500', label: 'Network TX', pct: Math.round((txFeeDrops / totalDrops) * 100) },
-                  { color: 'bg-yellow-500', label: 'Platform', pct: Math.round((platformDrops / totalDrops) * 100) },
-                ].map(({ color, label, pct }) => (
-                  <div key={label} className="flex items-center gap-1.5 text-xs font-mono text-zinc-500">
-                    <span className={`w-2 h-2 rounded-full ${color} shrink-0`} />
-                    {label} {pct}%
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* USD + per-message + context */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800 border-t border-zinc-800">
-              <div className="p-6 bg-green-950/10">
-                <p className="text-xs font-mono text-zinc-500 mb-1">TOTAL IN USD</p>
-                <p className="text-3xl font-black text-green-400 tabular-nums">
-                  ${totalUSD < 0.001 ? totalUSD.toFixed(6) : totalUSD.toFixed(4)}
-                </p>
-                <p className="text-zinc-500 text-xs font-mono mt-1">at XRP = $1.40</p>
-              </div>
-
-              <div className="p-6">
-                <p className="text-xs font-mono text-zinc-500 mb-1">PER MESSAGE</p>
-                <p className="text-3xl font-black text-white tabular-nums">{perMsgDrops}</p>
-                <p className="text-zinc-500 text-xs font-mono mt-1">
-                  drops · ${(perMsgDrops * USD_PER_DROP).toFixed(7)} USD
-                </p>
-              </div>
-
-              <div className="p-6">
-                <p className="text-xs font-mono text-zinc-500 mb-1">$1 BUYS YOU</p>
-                <p className="text-3xl font-black text-white tabular-nums">
-                  {Math.floor(1 / (totalUSD / messageCount)).toLocaleString()}
-                </p>
-                <p className="text-zinc-500 text-xs font-mono mt-1">
-                  encrypted messages
-                </p>
-              </div>
-            </div>
-
-            {/* Competitor comparison */}
-            <div className="border-t border-zinc-800 p-6 bg-zinc-950/40">
-              <p className="text-xs font-mono text-zinc-600 mb-4">COST COMPARISON FOR {messageCount} MESSAGES</p>
-              <div className="space-y-2">
-                {[
-                  {
-                    name: 'iMessage / WhatsApp',
-                    cost: '$0.00',
-                    note: 'Apple / Meta store and can access your metadata. US law enforcement requests honored.',
-                    bar: 0,
-                    color: 'bg-zinc-700',
-                    tag: 'FREE YOUR DATA',
-                    tagColor: 'text-red-500 border-red-900/50',
-                  },
-                  {
-                    name: 'Signal',
-                    cost: '$0.00',
-                    note: 'Strong E2E encryption. Non-profit. But a subpoena could compel metadata or key disclosure in edge cases.',
-                    bar: 0,
-                    color: 'bg-zinc-600',
-                    tag: 'TRUST THE ORG',
-                    tagColor: 'text-yellow-600 border-yellow-900/50',
-                  },
-                  {
-                    name: 'xSMS XRP',
-                    cost: `$${totalUSD < 0.001 ? totalUSD.toFixed(6) : totalUSD.toFixed(4)}`,
-                    note: `${totalDrops.toLocaleString()} drops. Server mathematically blind. XRPL identity. No org to subpoena for plaintext.`,
-                    bar: 100,
-                    color: 'bg-green-500',
-                    tag: 'TRUST MATH',
-                    tagColor: 'text-green-400 border-green-800/50',
-                  },
-                ].map(({ name, cost, note, bar, color, tag, tagColor }) => (
-                  <div key={name} className="flex items-start gap-3">
-                    <div className="w-32 shrink-0 pt-0.5">
-                      <p className="text-zinc-300 text-xs font-semibold">{name}</p>
-                      <p className="text-zinc-600 text-xs font-mono">{cost}</p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden mb-1">
-                        <div className={`h-full ${color} rounded-full`} style={{ width: bar > 0 ? '100%' : '4px' }} />
-                      </div>
-                      <p className="text-zinc-600 text-xs leading-relaxed">{note}</p>
-                    </div>
-                    <span className={`shrink-0 text-xs font-mono border rounded-full px-2 py-0.5 ${tagColor}`}>{tag}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ── TECH SPECS ── */}
         <section className="pb-20">
           <div className="flex items-center gap-3 mb-8">
@@ -1072,7 +1069,7 @@ export default function XSMSPage() {
                 Send your first encrypted message.
               </h2>
               <p className="text-zinc-500 text-sm max-w-lg mx-auto mb-8 leading-relaxed">
-                5 drops to store. 3 drops to retrieve.
+                15 drops to send. 15 drops to receive. 30 per exchange.
                 Your private key never leaves your browser.
                 The XRP Ledger verifies identity.
                 The math handles the rest.

@@ -129,6 +129,12 @@ export default function Home() {
           <a href="/xsms" className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-800/50 hover:border-emerald-600 rounded-full px-3 py-1.5">
             xSMS
           </a>
+          <a href="/social" className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-pink-400 hover:text-pink-300 transition-colors border border-pink-800/50 hover:border-pink-600 rounded-full px-3 py-1.5">
+            xSocial
+          </a>
+          <a href="/market" className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-yellow-400 hover:text-yellow-300 transition-colors border border-yellow-800/50 hover:border-yellow-600 rounded-full px-3 py-1.5">
+            xMarket
+          </a>
           <a href="/services" className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-white transition-colors border border-zinc-800 hover:border-zinc-600 rounded-full px-3 py-1.5">
             SERVICES
           </a>
