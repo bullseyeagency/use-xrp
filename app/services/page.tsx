@@ -30,12 +30,19 @@ const colorMap: Record<string, string> = {
   yellow: 'border-yellow-500 text-yellow-400',
 }
 
+const FALLBACK_ADDRESS = 'rNkDNuS2abDQr44VEDN9rdQ2k66hfq9e67'
+
 export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState<Tab>('registry')
-  const [merchantAddress, setMerchantAddress] = useState('')
+  const [merchantAddress, setMerchantAddress] = useState(
+    process.env.NEXT_PUBLIC_MERCHANT_WALLET_ADDRESS || FALLBACK_ADDRESS
+  )
 
   useEffect(() => {
-    fetch('/api/products').then(r => r.json()).then(d => setMerchantAddress(d.merchantAddress))
+    fetch('/api/products')
+      .then(r => r.json())
+      .then(d => { if (d.merchantAddress) setMerchantAddress(d.merchantAddress) })
+      .catch(() => {})
   }, [])
 
   const activeColor = colorMap[TABS.find(t => t.id === activeTab)?.color ?? 'blue']
