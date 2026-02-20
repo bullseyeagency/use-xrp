@@ -91,6 +91,7 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [merchantAddress, setMerchantAddress] = useState('')
   const [selected, setSelected] = useState<Product | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/products')
@@ -143,8 +144,43 @@ export default function Home() {
             MAINNET LIVE
           </div>
           <WalletBadge address={merchantAddress} />
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMobileMenuOpen(o => !o)}
+            className="sm:hidden flex flex-col gap-1.5 p-2 rounded-lg border border-zinc-800 hover:border-zinc-600 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <span className={`block w-5 h-0.5 bg-zinc-400 transition-transform duration-200 ${mobileMenuOpen ? 'translate-y-2 rotate-45' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-zinc-400 transition-opacity duration-200 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-zinc-400 transition-transform duration-200 ${mobileMenuOpen ? '-translate-y-2 -rotate-45' : ''}`} />
+          </button>
         </div>
       </header>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden fixed top-[calc(2rem+57px)] left-0 right-0 z-30 bg-black/95 border-b border-zinc-800 backdrop-blur-sm px-6 py-4 flex flex-col gap-3">
+          <a href="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-xs font-mono text-zinc-400 hover:text-white transition-colors border border-zinc-800 hover:border-zinc-600 rounded-full px-4 py-2 text-center">
+            HOW IT WORKS
+          </a>
+          <a href="/xsms" onClick={() => setMobileMenuOpen(false)} className="text-xs font-mono text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-800/50 hover:border-emerald-600 rounded-full px-4 py-2 text-center">
+            xSMS
+          </a>
+          <a href="/social" onClick={() => setMobileMenuOpen(false)} className="text-xs font-mono text-pink-400 hover:text-pink-300 transition-colors border border-pink-800/50 hover:border-pink-600 rounded-full px-4 py-2 text-center">
+            xSocial
+          </a>
+          <a href="/market" onClick={() => setMobileMenuOpen(false)} className="text-xs font-mono text-yellow-400 hover:text-yellow-300 transition-colors border border-yellow-800/50 hover:border-yellow-600 rounded-full px-4 py-2 text-center">
+            xMarket
+          </a>
+          <a href="/services" onClick={() => setMobileMenuOpen(false)} className="text-xs font-mono text-zinc-400 hover:text-white transition-colors border border-zinc-800 hover:border-zinc-600 rounded-full px-4 py-2 text-center">
+            SERVICES
+          </a>
+          <div className="flex items-center justify-center gap-1.5 text-xs font-mono text-green-400 pt-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            MAINNET LIVE
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <section className="relative px-6 pt-20 pb-16 text-center">
