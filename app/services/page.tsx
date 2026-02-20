@@ -60,9 +60,29 @@ export default function ServicesPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-10">
         {/* Page title */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-black text-white tracking-tight">Agent Services</h1>
           <p className="text-zinc-500 text-sm mt-1">Infrastructure for the AI agent economy. Pay with XRP drops, receive instantly.</p>
+        </div>
+
+        {/* Merchant wallet — always visible */}
+        <div className="mb-8 border border-zinc-700 rounded-xl px-5 py-4 bg-zinc-950/60 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-mono text-zinc-500 mb-1">SEND DROPS TO THIS ADDRESS</p>
+            {merchantAddress ? (
+              <p className="text-green-400 font-mono text-sm break-all">{merchantAddress}</p>
+            ) : (
+              <p className="text-zinc-600 font-mono text-sm animate-pulse">Loading...</p>
+            )}
+          </div>
+          {merchantAddress && (
+            <button
+              onClick={() => navigator.clipboard.writeText(merchantAddress)}
+              className="shrink-0 text-xs font-mono border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white rounded-lg px-3 py-2 transition-colors"
+            >
+              COPY
+            </button>
+          )}
         </div>
 
         {/* Tab bar */}
