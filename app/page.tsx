@@ -43,6 +43,9 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <a href="/how-it-works" className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-white transition-colors border border-zinc-800 hover:border-zinc-600 rounded-full px-3 py-1.5">
+            HOW IT WORKS
+          </a>
           <a href="/services" className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-white transition-colors border border-zinc-800 hover:border-zinc-600 rounded-full px-3 py-1.5">
             SERVICES
           </a>
