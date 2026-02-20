@@ -28,24 +28,13 @@ export async function POST(req: NextRequest) {
     const messages = await readStore<DeadDropMessage>('messages.json')
     const message = messages.find((m) => m.id === messageId)
 
-    if (!message) {
-      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
-    }
-
-    if (message.retrieved) {
-      return NextResponse.json({ error: 'Message already retrieved' }, { status: 410 })
-    }
-
-    if (Date.now() > message.expiresAt) {
-      return NextResponse.json({ error: 'Message expired' }, { status: 410 })
-    }
-
-    // Verify retriever is the intended recipient
+    if (!message) return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    if (message.retrieved) return NextResponse.json({ error: 'Message already retrieved' }, { status: 410 })
+    if (Date.now() > message.expiresAt) return NextResponse.json({ error: 'Message expired' }, { status: 410 })
     if (payment.fromAddress !== message.toAddress) {
       return NextResponse.json({ error: 'Not the intended recipient' }, { status: 403 })
     }
 
-    // Mark as retrieved
     const updated = messages.map((m) =>
       m.id === messageId
         ? { ...m, retrieved: true, retrieveTxHash: txHash, retrievedAt: Date.now() }
@@ -58,6 +47,10 @@ export async function POST(req: NextRequest) {
       content: message.content,
       from: message.fromAddress,
       sentAt: message.storedAt,
+      // Encryption metadata — decryption happens client-side
+      encrypted: message.encrypted ?? false,
+      ephemeralPublicKey: message.ephemeralPublicKey,
+      encryptionVersion: message.encryptionVersion,
     })
   } catch (err) {
     console.error('Dead drop retrieve error:', err)

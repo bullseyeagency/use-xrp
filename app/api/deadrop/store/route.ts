@@ -7,11 +7,11 @@ import { appendStore, readStore } from '@/lib/storage'
 import { DeadDropMessage } from '@/lib/types/deadrop'
 
 const DROPS_REQUIRED = 5
-const EXPIRY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+const EXPIRY_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function POST(req: NextRequest) {
   try {
-    const { txHash, toAddress, content } = await req.json()
+    const { txHash, toAddress, content, encrypted, ephemeralPublicKey, encryptionVersion } = await req.json()
 
     if (!txHash || !toAddress || !content) {
       return NextResponse.json({ error: 'txHash, toAddress, and content required' }, { status: 400 })
@@ -37,11 +37,15 @@ export async function POST(req: NextRequest) {
       id: randomUUID(),
       fromAddress: payment.fromAddress!,
       toAddress: String(toAddress),
-      content: String(content).slice(0, 2048),
+      content: String(content).slice(0, 8192), // larger limit for encrypted blobs
       storeTxHash: txHash,
       storedAt: now,
       expiresAt: now + EXPIRY_MS,
       retrieved: false,
+      // Encryption metadata
+      encrypted: encrypted === true,
+      ephemeralPublicKey: ephemeralPublicKey ? String(ephemeralPublicKey) : undefined,
+      encryptionVersion: encryptionVersion ? String(encryptionVersion) : undefined,
     }
 
     await appendStore('messages.json', message)
@@ -51,6 +55,7 @@ export async function POST(req: NextRequest) {
       messageId: message.id,
       expiresAt: message.expiresAt,
       toAddress: message.toAddress,
+      encrypted: message.encrypted ?? false,
     })
   } catch (err) {
     console.error('Dead drop store error:', err)
